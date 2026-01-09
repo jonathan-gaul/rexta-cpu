@@ -75,7 +75,7 @@ module cpu_top (
 	
 	
 	integer i;
-	// Initial block (simulation + ROM init)
+	// Initial block (simulation + RAM init)
 	// Only needed for simulation
 	
 	initial begin
@@ -232,6 +232,46 @@ module cpu_top (
 							regs[operand1[3:0]] <= alu_out;
 							cf <= cf_out;
 							zf <= zf_out;
+							state <= STATE_FETCH_IR;
+						end
+						
+						OPCODE_LOAD: begin
+							regs[operand1[3:0]] <= ram[{operand2, operand3}];
+							state <= STATE_FETCH_IR;
+						end
+						
+						OPCODE_STORE: begin
+							ram[{operand2, operand3}] <= regs[operand1[3:0]];
+							state <= STATE_FETCH_IR;
+						end
+						
+						OPCODE_JMP: begin
+							pc <= {operand1, operand2};
+							state <= STATE_FETCH_IR;
+						end
+						
+						OPCODE_JZ: begin
+							if (zf) begin
+								pc <= {operand1, operand2};
+							end
+							state <= STATE_FETCH_IR;
+						end
+						
+						OPCODE_JC: begin
+							if (cf) begin
+								pc <= {operand1, operand2};
+							end
+							state <= STATE_FETCH_IR;
+						end
+						
+						OPCODE_JSR: begin 
+							// todo: push pc to stack
+							pc <= {operand1, operand2};
+							state <= STATE_FETCH_IR;
+						end
+						
+						OPCODE_RTS: begin
+							// todo: pop pc from stack
 							state <= STATE_FETCH_IR;
 						end
 						
