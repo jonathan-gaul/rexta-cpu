@@ -1,163 +1,105 @@
+`include "opcodes.v"
+`include "states.v"
+
 module cpu_top (
 	input wire clk,
 	input wire reset,
 	output wire [2:0] leds
 );
 
-	// Program Counter
-	reg [15:0] pc;
+	// Program Counter - 24-bit
+	reg [23:0] pc;
 		
-	// Registers
-	reg [7:0] regs [0:7];
-	assign leds = ~regs[0][2:0];
+	// Registers - 8-bit x REG_COUNT
+	parameter REG_COUNT = 9;
+	reg [7:0] regs [0:REG_COUNT-1];
+	assign leds = ~regs[0][2:0]; // LEDs on board show lowest 3 bits of R0
 	
+	parameter RAM_SIZE = 1024;
 	// Simple program RAM
-	reg [7:0] ram [0:255] /* synthesis ram_init_file = "program1.mif" */;
+	reg [7:0] ram [0:RAM_SIZE-1] /* synthesis ram_init_file = "program1.mif" */;
 			
-	// State register 
+	// State register
 	reg [2:0] state;
+	reg [2:0] substate; // Substate/state counter
+
 	
-	// CPU state machine
-	localparam STATE_FETCH_IR 	= 3'b000;
-	localparam STATE_FETCH_OP1 = 3'b001;
-	localparam STATE_FETCH_OP2 = 3'b010;
-	localparam STATE_FETCH_OP3 = 3'b011;
-	localparam STATE_EXECUTE 	= 3'b100;
-	localparam STATE_HALT		= 3'b101;
+	// 16-bit Instruction Register
+	reg [15:0] ir;
 	
-	// ALU output
-	reg [7:0] alu_out;
-	reg cf_out, zf_out;
+	// Instructin width from instruction register
+	wire [1:0] instruction_width;
+	assign instruction_width = ir[1:0];
 	
-	// Formats
-	localparam OPFMT_NONE		= 4'h0;
-	localparam OPFMT_RD			= 4'h1;
-	localparam OPFMT_RD_RS		= 4'h2;
-	localparam OPFMT_RD_IMM		= 4'h3;
-	localparam OPFMT_RD_ADDR	= 4'h4;
-	localparam OPFMT_ADDR		= 4'h5;
+	// Operand count from instruction register
+	wire [2:0] operand_count;
+	assign operand_count = ir[11:9];
 	
-	// Opcodes	
-	localparam OPCODE_RTS		= {OPFMT_NONE,	   4'h1};
-	localparam OPCODE_HLT 		= {OPFMT_NONE,    4'h2};
+	// 8-bit Operand registers x7
+	reg [7:0] operands [0:8];
 	
-	localparam OPCODE_ADD		= {OPFMT_RD_RS,   4'h0};
-	localparam OPCODE_SUB		= {OPFMT_RD_RS,   4'h1};
-	localparam OPCODE_AND		= {OPFMT_RD_RS,   4'h2};
-	localparam OPCODE_OR 		= {OPFMT_RD_RS,   4'h3};
-	localparam OPCODE_XOR 		= {OPFMT_RD_RS,   4'h4};
-	
-	localparam OPCODE_NOT 		= {OPFMT_RD, 	   4'h0};
-	
-	localparam OPCODE_LOADI 	= {OPFMT_RD_IMM,  4'h0};
-	localparam OPCODE_ADDI 	 	= {OPFMT_RD_IMM,	4'h1};
-	
-	localparam OPCODE_LOAD  	= {OPFMT_RD_ADDR, 4'h0};	
-	localparam OPCODE_STORE		= {OPFMT_RD_ADDR, 4'h1};
-	
-	localparam OPCODE_JMP 		= {OPFMT_ADDR, 	4'h0};
-	localparam OPCODE_JZ 		= {OPFMT_ADDR, 	4'h1};
-	localparam OPCODE_JC 		= {OPFMT_ADDR, 	4'h2};
-	localparam OPCODE_JSR 		= {OPFMT_ADDR, 	4'h3};
-	
-	
-	// Instruction Register
-	reg [7:0] ir;
-	
-	// Operand registers
-	reg [7:0] operand1;
-	reg [7:0] operand2;
-	reg [7:0] operand3;
+	// If Rd is present, it is always in the upper 4 bits of operands[0]	
+	wire [4:0] rd = operands[0][7:4];
+	// If Rs is present, it is always in the lower 4 bits of operands[0]
+	wire [4:0] rs = operands[0][3:0];
 	
 	// FLAGS (carry, zero)
 	reg cf, zf;
-	
-	
-	
+			
 	integer i;
-	// Initial block (simulation + RAM init)
-	// Only needed for simulation
+	reg [7:0] temp_byte; // Temporary buffer byte for e.g. ZF checks
+	reg carry; // Temp carry for multibyte arithmetic
 	
+	// ALU	
+	reg [7:0] reg_a;
+	reg [7:0] reg_b;
+	reg [3:0] alu_op;
+	reg carry_in;
+	wire [7:0] alu_out;
+	wire alu_carry;	
+	alu alu_inst (
+	  .a(reg_a),
+	  .b(reg_b),
+	  .op(alu_op),
+	  .carry_in(carry_in),
+	  .result(alu_out),
+	  .carry_out(alu_carry)
+   );
+
+
+	// Initial block (simulation + RAM init)
+	// Only needed for simulation	
 	initial begin
-		pc 	= 16'h0000;
-		state = STATE_FETCH_IR;
+		pc 	<= 16'h0000;
+		state <= `STATE_FETCH_IR;
 		
 		// Init registers
-		for (i = 0; i < 8; i = i + 1)
+		for (i = 0; i < 9; i = i + 1)
 			regs[i] = 8'h00;
 			
 		cf <= 0;
 		zf <= 0;
 		
-	  // Temporary hard-coded program
-	  ram[0] = OPCODE_LOADI;
-	  ram[1] = 8'h00; // R0
-	  ram[2] = 8'h0A; // 10
-	  ram[3] = OPCODE_LOADI;
-	  ram[4] = 8'h01; // R1
-	  ram[5] = 8'h01; // 1
-	  ram[6] = OPCODE_ADD;
-	  ram[7] = {4'h1, 4'h0}; // Rs=1:Rd=0
-	  ram[8] = OPCODE_HLT;
-	end	
-	
-	// ALU combinational logic
-	always @(*) begin 
-		alu_out = 8'h00;
-		cf_out = 0;
-		zf_out = 0;
+		// Init RAM
+		for (i = 0; i < RAM_SIZE; i = i + 1)
+			ram[i] = 8'h00;
 		
-		case (ir)
-			OPCODE_ADD: begin // ADD Rd, Rs
-				{cf_out, alu_out} = regs[operand1[3:0]] + regs[operand1[7:4]];
-				zf_out = (alu_out == 8'h00);
-			end
-			
-			OPCODE_ADDI: begin // ADDI Rd, imm
-				{cf_out, alu_out} = regs[operand1[3:0]] + operand2;
-				zf_out = (alu_out == 8'h00);
-			end
-			
-			OPCODE_SUB: begin // SUB Rd, Rs
-				alu_out = regs[operand1[3:0]] - regs[operand1[7:4]];
-				zf_out = (alu_out == 8'h00);
-				cf_out = (regs[operand1[3:0]] >= regs[operand1[7:4]]); // CF = 1 if no borrow	
-			end
-			
-			OPCODE_AND: begin // AND Rd, Rs
-				alu_out = regs[operand1[3:0]] & regs[operand1[7:4]];
-				cf_out = 0;
-				zf_out = (alu_out == 8'h00);
-			end
-			
-			OPCODE_OR: begin // OR Rd, Rs
-				alu_out = regs[operand1[3:0]] | regs[operand1[7:4]];
-				cf_out = 0;
-				zf_out = (alu_out == 8'h00);
-			end
-			
-			OPCODE_XOR: begin // XOR Rd, Rs
-				alu_out = regs[operand1[3:0]] | regs[operand1[7:4]];
-				cf_out = 0;
-				zf_out = (alu_out == 8'h00);
-			end
-			
-			OPCODE_NOT: begin 
-				alu_out = ~regs[operand1[3:0]];
-				cf_out = 0;
-				zf_out = (alu_out == 8'h00);
-			end
-			
-			default: begin
-			end
-		endcase
+		// LOADI.1 R0, 0x42
+		ram[0] = 8'h04; // LOADI1 opcode high byte
+		ram[1] = 8'h01; // LOADI1 opcode low byte
+		ram[2] = 8'h00; // Rd=R0
+		ram[3] = 8'h42; // value
+
+		// HLT
+		ram[4] = 8'h00; // HLT high byte
+		ram[5] = 8'h04; // HLT low byte
 	end
-	
+	                          	
 	wire a_reset = ~reset;
 	always @(posedge clk or posedge a_reset) begin
 		if (a_reset) begin 
 			pc 	<= 16'h0000;
-			ir		<= 8'h00;
+			ir 	<= 16'h0000;
 			
 			regs[0] <= 8'h00;
 			regs[1] <= 8'h00;
@@ -168,125 +110,100 @@ module cpu_top (
 			regs[6] <= 8'h00;
 			regs[7] <= 8'h00;
 			
-			state <= STATE_FETCH_IR;
+			state <= `STATE_FETCH_IR;
+			substate <= 0;
 		end else begin 
 			case (state)
-				STATE_FETCH_IR: begin 
-					ir <= ram[pc];
+				`STATE_FETCH_IR: begin					
+					if (substate) begin
+						ir[7:0] <= ram[pc];
+						substate <= 3'b000;
+						state <= `STATE_FETCH_OP;
+					end else begin
+						ir[15:8] <= ram[pc];
+						substate <= 3'b001;
+					end
+					pc <= pc + 16'h0001;					
+				end
+				
+				// Fetch operands based on bits 11:9 of the opcode
+				`STATE_FETCH_OP: begin
+					operands[substate] <= ram[pc];
 					pc <= pc + 16'h0001;
-					state <= STATE_FETCH_OP1;
-				end
-				
-				// Fetch operands based on high nibble of opcode
-				STATE_FETCH_OP1: begin
-					case (ir[7:4])
-						OPFMT_RD, OPFMT_RD_RS, OPFMT_RD_IMM, 
-						OPFMT_RD_ADDR, OPFMT_ADDR: begin
-							operand1 <= ram[pc];
-							pc <= pc + 16'h0001;
-							state <= STATE_FETCH_OP2;
-						end
-						default: begin
-							state <= STATE_EXECUTE;
-						end
-					endcase
-				end
-				
-				STATE_FETCH_OP2: begin 
-					case (ir[7:4])
-						OPFMT_RD_ADDR, OPFMT_RD_IMM, OPFMT_ADDR: begin 
-							operand2 <= ram[pc];
-							pc <= pc + 16'h0001;
-							state <= STATE_FETCH_OP3;
-						end
-						default: begin
-							state <= STATE_EXECUTE;
-						end					
-					endcase
+					
+					if (substate + 3'b001 == operand_count) begin
+						// All operands have been fetched
+						substate <= 0;
+						state <= `STATE_EXECUTE;
+					end else begin
+						substate <= substate + 3'b001;
+					end
 				end				
 				
-				STATE_FETCH_OP3: begin
-					case (ir[7:4])
-						OPFMT_RD_ADDR: begin
-							operand3 <= ram[pc];
-							pc <= pc + 16'h0001;
-						end
-						default: begin
-						end
-					endcase
-					state <= STATE_EXECUTE;
-				end
-				
-				STATE_EXECUTE: begin
+				`STATE_EXECUTE: begin
 					case (ir)
-						OPCODE_LOADI: begin
-							regs[operand1[3:0]] <= operand2;
-							state <= STATE_FETCH_IR;
+						`OP_LOADI1, `OP_LOADI2, `OP_LOADI3: begin
+							case (instruction_width)
+								2'b01: begin
+									regs[rd] <= operands[1];
+									zf <= (regs[rd] == 8'h00);
+								end								
+								2'b10: begin
+									regs[rd] <= operands[1];
+									regs[(rd+1) % REG_COUNT] <= operands[2];
+									zf <= (regs[rd] == 8'h00)
+											&& (regs[(rd+1) % REG_COUNT] == 8'h00);
+								end
+								2'b11: begin
+									regs[rd] <= operands[1];
+									regs[(rd+1) % REG_COUNT] <= operands[2];
+									regs[(rd+2) % REG_COUNT] <= operands[3];
+									zf <= (regs[rd] == 8'h00)
+											&& (regs[(rd+1) % REG_COUNT] == 8'h00) 
+											&& (regs[(rd+1) % REG_COUNT] == 8'h00);
+								end
+							endcase
+							substate <= 0;
+							state <= `STATE_FETCH_IR;
 						end
 						
-						// Handled by ALU
-						OPCODE_ADD, OPCODE_SUB,
-						OPCODE_AND, OPCODE_OR,
-						OPCODE_XOR, OPCODE_NOT,
-						OPCODE_ADDI: begin
-							regs[operand1[3:0]] <= alu_out;
-							cf <= cf_out;
-							zf <= zf_out;
-							state <= STATE_FETCH_IR;
-						end
-						
-						OPCODE_LOAD: begin
-							regs[operand1[3:0]] <= ram[{operand2, operand3}];
-							state <= STATE_FETCH_IR;
-						end
-						
-						OPCODE_STORE: begin
-							ram[{operand2, operand3}] <= regs[operand1[3:0]];
-							state <= STATE_FETCH_IR;
-						end
-						
-						OPCODE_JMP: begin
-							pc <= {operand1, operand2};
-							state <= STATE_FETCH_IR;
-						end
-						
-						OPCODE_JZ: begin
-							if (zf) begin
-								pc <= {operand1, operand2};
+						`OP_ADDI1, `OP_ADDI2, `OP_ADDI3: begin
+							carry = 0;
+							temp_byte = 0; // zf
+							
+							for (i = 0; i < 3; i = i + 1) begin
+								// Set up ALU inputs
+								reg_a = regs[(rd + i) % REG_COUNT];
+								reg_b = i < instruction_width ? operands[i + 1] : 8'h00;
+								alu_op = 3'b000; // ADD
+								carry_in = carry;
+								
+								regs[(rd + i) % REG_COUNT] <= alu_out;
+								carry = alu_carry;
+								temp_byte = temp_byte | alu_out;
 							end
-							state <= STATE_FETCH_IR;
+							
+							zf <= (temp_byte == 8'h00);
+							cf <= carry;
+							
+							substate <= 0;
+							state <= `STATE_FETCH_IR;
 						end
 						
-						OPCODE_JC: begin
-							if (cf) begin
-								pc <= {operand1, operand2};
-							end
-							state <= STATE_FETCH_IR;
-						end
-						
-						OPCODE_JSR: begin 
-							// todo: push pc to stack
-							pc <= {operand1, operand2};
-							state <= STATE_FETCH_IR;
-						end
-						
-						OPCODE_RTS: begin
-							// todo: pop pc from stack
-							state <= STATE_FETCH_IR;
-						end
-						
-						OPCODE_HLT: begin
-							state <= STATE_HALT;
+						`OP_HLT: begin
+							substate <= 0;
+							state <= `STATE_HALT;
 						end
 						
 						default: begin
-							state <= STATE_FETCH_IR;
+							substate <= 0;
+							state <= `STATE_HALT;
 							// unknown opcode
 						end
 					endcase
 				end
 				
-				STATE_HALT: begin
+				`STATE_HALT: begin
 					// do nothing, halted
 				end
 			endcase			

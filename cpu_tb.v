@@ -21,8 +21,8 @@ module cpu_tb;
 		#20; // hold reset for 20ns
 		reset = 1;
 		
-		// Run simulation for 1500ns
-		#1500;
+		// Run simulation for 500ns
+		#500;
 		
 		$stop;
 	end
