@@ -1,5 +1,0 @@
-
-`define STATE_FETCH_IR 3'b000
-`define STATE_FETCH_OP 3'b001
-`define STATE_EXECUTE 3'b010
-`define STATE_HALT 3'b011
