@@ -150,6 +150,10 @@ always_ff @( posedge clk or posedge reset ) begin : main
 
 			STATE_EXECUTE: begin
 				case (ir)
+
+					// ----------------------------------------
+					// LOADI
+					// ----------------------------------------
 					OP_LOADI1, OP_LOADI2, OP_LOADI3: begin
 						if (state_ctr == ir_width) begin
 							state_ctr <= 0;
@@ -160,6 +164,9 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
+					// ----------------------------------------
+					// LOAD
+					// ----------------------------------------
 					OP_LOAD1, OP_LOAD2, OP_LOAD3: begin
 						if (!load_wait) begin
 							// Step 1: set memory address
@@ -181,6 +188,9 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
+					// ----------------------------------------
+					// STORE
+					// ----------------------------------------
 					OP_STORE1, OP_STORE2, OP_STORE3: begin
 						if (!load_wait) begin
 							// Step 1: set memory address & data to write
@@ -200,6 +210,40 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
+					// ----------------------------------------
+					// ADD
+					// ----------------------------------------
+					OP_ADD1, OP_ADD2, OP_ADD3: begin
+						if (state_ctr == ir_width + 1) begin
+							state_ctr <= 0;
+							zero <= (temp == 8'h00);
+							state <= STATE_FETCH_IR;
+						end else begin
+							if (!load_wait) begin
+								alu_a <= regs[rd + state_ctr];
+								alu_b <= regs[rs + state_ctr];
+								alu_op <= `ALU_ADD;
+								alu_cin <= carry;
+								load_wait <= 1; // get result at next clock edge
+							end else begin
+								regs[rd + state_ctr] <= alu_result;
+								carry <= alu_cout;
+
+								if (!state_ctr) begin
+									temp <= alu_result;
+								end else begin
+									temp <= temp | alu_result;
+								end
+
+								load_wait <= 0;
+								state_ctr <= state_ctr + 3'h1;
+							end
+						end
+					end
+
+					// ----------------------------------------
+					// ADDI
+					// ----------------------------------------
 					OP_ADDI1, OP_ADDI2, OP_ADDI3: begin
 						if (state_ctr == ir_width + 1) begin
 							state_ctr <= 0;
@@ -228,6 +272,40 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
+					// ----------------------------------------
+					// SUB
+					// ----------------------------------------
+					OP_SUB1, OP_SUB2, OP_SUB3: begin
+						if (state_ctr == ir_width + 1) begin
+							state_ctr <= 0;
+							zero <= (temp == 8'h00);
+							state <= STATE_FETCH_IR;
+						end else begin
+							if (!load_wait) begin
+								alu_a <= regs[rd + state_ctr];
+								alu_b <= regs[rs + state_ctr];
+								alu_op <= `ALU_SUB;
+								alu_cin <= carry;
+								load_wait <= 1; // get result at next clock edge
+							end else begin
+								regs[rd + state_ctr] <= alu_result;
+								carry <= alu_cout;
+
+								if (!state_ctr) begin
+									temp <= alu_result;
+								end else begin
+									temp <= temp | alu_result;
+								end
+
+								load_wait <= 0;
+								state_ctr <= state_ctr + 3'h1;
+							end
+						end
+					end
+
+					// ----------------------------------------
+					// SUBI
+					// ----------------------------------------
 					OP_SUBI1, OP_SUBI2, OP_SUBI3: begin
 						if (state_ctr == ir_width + 1) begin
 							state_ctr <= 0;
@@ -256,6 +334,9 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
+					// ----------------------------------------
+					// AND
+					// ----------------------------------------
 					OP_AND1, OP_AND2, OP_AND3: begin
 						if (state_ctr == ir_width + 1) begin
 							state_ctr <= 0;
@@ -284,6 +365,9 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
+					// ----------------------------------------
+					// OR
+					// ----------------------------------------
 					OP_OR1, OP_OR2, OP_OR3: begin
 						if (state_ctr == ir_width + 1) begin
 							state_ctr <= 0;
@@ -312,6 +396,9 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
+					// ----------------------------------------
+					// XOR
+					// ----------------------------------------
 					OP_XOR1, OP_XOR2, OP_XOR3: begin
 						if (state_ctr == ir_width + 1) begin
 							state_ctr <= 0;
@@ -340,15 +427,39 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
-					
+					// ----------------------------------------
+					// MOV
+					// ----------------------------------------
+					OP_MOV1, OP_MOV2, OP_MOV3: begin
+						regs[rd] <= regs[rs];
+						temp = regs[rs];
 
+						if (ir_width > 1) begin
+							regs[rd+1] <= regs[rs+1];
+							temp = temp | regs[rs+1];
+						end
+
+						if (ir_width > 2) begin
+							regs[rd+2] <= regs[rs+2];
+							temp = temp | regs[rs+2];
+						end
+
+						zero <= temp == 8'h00;
+					end
+
+					// ----------------------------------------
+					// JMP
+					// ----------------------------------------
 					OP_JMP: begin
 						pc <= {ops[2], ops[1], ops[0]};
 						state_ctr <= 0;
 						state <= STATE_FETCH_IR;
 					end
 
-					OP_JC: begin
+					// ----------------------------------------
+					// JCS
+					// ----------------------------------------
+					OP_JCS: begin
 						if (carry) begin
 							state_ctr <= 0;
 							state <= STATE_FETCH_IR;
@@ -356,15 +467,21 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
-					OP_JZ: begin
+					// ----------------------------------------
+					// JZS
+					// ----------------------------------------
+					OP_JZS: begin
 						if (zero) begin
 							state_ctr <= 0;
 							state <= STATE_FETCH_IR;
 							pc <= {ops[2], ops[1], ops[0]};
 						end
-					end					
+					end
 
-					OP_JNC: begin
+					// ----------------------------------------
+					// JCN
+					// ----------------------------------------
+					OP_JCN: begin
 						if (!carry) begin
 							state_ctr <= 0;
 							state <= STATE_FETCH_IR;
@@ -372,7 +489,10 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
-					OP_JNZ: begin
+					// ----------------------------------------
+					// JZN
+					// ----------------------------------------
+					OP_JZN: begin
 						if (!zero) begin
 							state_ctr <= 0;
 							state <= STATE_FETCH_IR;
@@ -380,18 +500,27 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end
 
+					// ----------------------------------------
+					// CLC
+					// ----------------------------------------
 					OP_CLC: begin
 						carry <= 0;
 						state_ctr <= 0;
 						state <= STATE_FETCH_IR;
 					end
 
+					// ----------------------------------------
+					// SEC
+					// ----------------------------------------
 					OP_SEC: begin
 						carry <= 1;
 						state_ctr <= 0;
 						state <= STATE_FETCH_IR;
 					end
 
+					// ----------------------------------------
+					// HLT
+					// ----------------------------------------
 					OP_HLT: begin
 						state_ctr <= 0;
 						state <= STATE_HALT;
