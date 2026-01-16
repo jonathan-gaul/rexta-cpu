@@ -1,6 +1,8 @@
 typedef enum logic [15:0] {
   OP_HLT = 16'h0004,
   OP_RTS = 16'h0008,
+  OP_CLC = 16'h000C,
+  OP_SEC = 16'h0010,
   OP_ADD1 = 16'h0201,
   OP_SUB1 = 16'h0205,
   OP_AND1 = 16'h0209,
@@ -81,6 +83,5 @@ typedef enum logic [15:0] {
   OP_LOAD3 = 16'h0807,
   OP_STORE3 = 16'h080B,
   OP_ADDI3 = 16'h080F,
-  OP_SUBI3 = 16'h0813,
-  OP_NOP = 16'h0000
+  OP_SUBI3 = 16'h0813
 } cpu_opcode_t;

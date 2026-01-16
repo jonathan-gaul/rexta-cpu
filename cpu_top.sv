@@ -96,7 +96,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 				pc <= 16'h0000;
 				sp <= 16'h1000;
 				state_ctr <= 0;
-				state <= STATE_FETCH_IR;			
+				state <= STATE_FETCH_IR;
 				load_wait <= 0;
 				mem_addr <= 0;
 				mem_write <= 0;
@@ -124,7 +124,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						end
 					end else begin
 						load_wait <= load_wait - 2'h1;
-					end					
+					end
 				end
 			end
 
@@ -144,7 +144,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						// Step 2: capture the operand byte
 						ops[state_ctr] <= mem_out;
 						state_ctr <= state_ctr + 3'h1;
-					end					
+					end
 				end
 			end
 
@@ -165,8 +165,8 @@ always_ff @( posedge clk or posedge reset ) begin : main
 							// Step 1: set memory address
 							mem_addr <= {ops[3], ops[2], ops[1]} + state_ctr;
 							load_wait <= MEM_WAIT;
-						end else begin							
-							if (load_wait == 1) begin 
+						end else begin
+							if (load_wait == 1) begin
 								// Step 2: capture mem_out
 								regs[rd + state_ctr] <= mem_out;
 								state_ctr <= state_ctr + 3'h1;
@@ -175,7 +175,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 									state_ctr <= 0;
 									state <= STATE_FETCH_IR;
 								end
-							end else begin								
+							end else begin
 								load_wait <= load_wait - 2'h1;
 							end
 						end
@@ -186,14 +186,14 @@ always_ff @( posedge clk or posedge reset ) begin : main
 							// Step 1: set memory address & data to write
 							mem_addr <= {ops[3], ops[2], ops[1]} + state_ctr;
 							mem_in <= regs[rs + state_ctr];
-							mem_write <= 1;												
+							mem_write <= 1;
 							load_wait <= 1;
 						end else begin
 							// Step 2: wait for write.
 							mem_write <= 0;
 							load_wait <= 0;
 							state_ctr <= state_ctr + 3'h1;
-							if (state_ctr == ir_width) begin						
+							if (state_ctr == ir_width) begin
 								state_ctr <= 0;
 								state <= STATE_FETCH_IR;
 							end
@@ -206,7 +206,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 							zero <= (temp == 8'h00);
 							state <= STATE_FETCH_IR;
 						end else begin
-							if (!load_wait) begin							
+							if (!load_wait) begin
 								alu_a <= regs[rd + state_ctr];
 								alu_b <= ops[1 + state_ctr];
 								alu_op <= `ALU_ADD;
@@ -223,7 +223,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 								end
 
 								load_wait <= 0;
-								state_ctr <= state_ctr + 1;
+								state_ctr <= state_ctr + 3'h1;
 							end
 						end
 					end
@@ -234,7 +234,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 							zero <= (temp == 8'h00);
 							state <= STATE_FETCH_IR;
 						end else begin
-							if (!load_wait) begin							
+							if (!load_wait) begin
 								alu_a <= regs[rd + state_ctr];
 								alu_b <= ops[1 + state_ctr];
 								alu_op <= `ALU_SUB;
@@ -251,7 +251,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 								end
 
 								load_wait <= 0;
-								state_ctr <= state_ctr + 1;
+								state_ctr <= state_ctr + 3'h1;
 							end
 						end
 					end
@@ -262,9 +262,9 @@ always_ff @( posedge clk or posedge reset ) begin : main
 							zero <= (temp == 8'h00);
 							state <= STATE_FETCH_IR;
 						end else begin
-							if (!load_wait) begin							
+							if (!load_wait) begin
 								alu_a <= regs[rd + state_ctr];
-								alu_b <= ops[1 + state_ctr];
+								alu_b <= regs[rs + state_ctr];
 								alu_op <= `ALU_AND;
 								alu_cin <= carry;
 								load_wait <= 1; // get result at next clock edge
@@ -279,7 +279,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 								end
 
 								load_wait <= 0;
-								state_ctr <= state_ctr + 1;
+								state_ctr <= state_ctr + 3'h1;
 							end
 						end
 					end
@@ -290,9 +290,9 @@ always_ff @( posedge clk or posedge reset ) begin : main
 							zero <= (temp == 8'h00);
 							state <= STATE_FETCH_IR;
 						end else begin
-							if (!load_wait) begin							
+							if (!load_wait) begin
 								alu_a <= regs[rd + state_ctr];
-								alu_b <= ops[1 + state_ctr];
+								alu_b <= regs[rs + state_ctr];
 								alu_op <= `ALU_OR;
 								alu_cin <= carry;
 								load_wait <= 1; // get result at next clock edge
@@ -307,7 +307,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 								end
 
 								load_wait <= 0;
-								state_ctr <= state_ctr + 1;
+								state_ctr <= state_ctr + 3'h1;
 							end
 						end
 					end
@@ -318,9 +318,9 @@ always_ff @( posedge clk or posedge reset ) begin : main
 							zero <= (temp == 8'h00);
 							state <= STATE_FETCH_IR;
 						end else begin
-							if (!load_wait) begin							
+							if (!load_wait) begin
 								alu_a <= regs[rd + state_ctr];
-								alu_b <= ops[1 + state_ctr];
+								alu_b <= regs[rs + state_ctr];
 								alu_op <= `ALU_XOR;
 								alu_cin <= carry;
 								load_wait <= 1; // get result at next clock edge
@@ -335,9 +335,61 @@ always_ff @( posedge clk or posedge reset ) begin : main
 								end
 
 								load_wait <= 0;
-								state_ctr <= state_ctr + 1;
+								state_ctr <= state_ctr + 3'h1;
 							end
 						end
+					end
+
+					
+
+					OP_JMP: begin
+						pc <= {ops[2], ops[1], ops[0]};
+						state_ctr <= 0;
+						state <= STATE_FETCH_IR;
+					end
+
+					OP_JC: begin
+						if (carry) begin
+							state_ctr <= 0;
+							state <= STATE_FETCH_IR;
+							pc <= {ops[2], ops[1], ops[0]};
+						end
+					end
+
+					OP_JZ: begin
+						if (zero) begin
+							state_ctr <= 0;
+							state <= STATE_FETCH_IR;
+							pc <= {ops[2], ops[1], ops[0]};
+						end
+					end					
+
+					OP_JNC: begin
+						if (!carry) begin
+							state_ctr <= 0;
+							state <= STATE_FETCH_IR;
+							pc <= {ops[2], ops[1], ops[0]};
+						end
+					end
+
+					OP_JNZ: begin
+						if (!zero) begin
+							state_ctr <= 0;
+							state <= STATE_FETCH_IR;
+							pc <= {ops[2], ops[1], ops[0]};
+						end
+					end
+
+					OP_CLC: begin
+						carry <= 0;
+						state_ctr <= 0;
+						state <= STATE_FETCH_IR;
+					end
+
+					OP_SEC: begin
+						carry <= 1;
+						state_ctr <= 0;
+						state <= STATE_FETCH_IR;
 					end
 
 					OP_HLT: begin
