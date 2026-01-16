@@ -1,3 +1,5 @@
+`include "cpu_top.sv"
+
 module cpu_tb;
     logic clk;
     logic reset;
@@ -21,10 +23,10 @@ module cpu_tb;
         #10;
         reset = 1;
 
-        // Run simulation for enough cycles to execute LOADI + HLT
-        #500;
+        // Run simulation for enough cycles
+        #1000;
 
-        $display("R0 = %0d", cpu.regs[0]); // should print 10
+        $display("R0 = %0d", cpu.regs[0]);
         $stop;
     end
 endmodule

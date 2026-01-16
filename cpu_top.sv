@@ -1,5 +1,6 @@
 `include "cpu_state.sv"
 `include "cpu_opcode.sv"
+`include "alu.sv"
 `include "ram.sv"
 
 module cpu_top (
@@ -17,6 +18,10 @@ logic [7:0] ir_l; 				// ir low byte
 logic [7:0] regs [0:15]; 		// 16 user registers
 
 logic [7:0] ops [0:7];			// 8 operand registers
+
+logic carry;					// carry flag
+logic zero;						// zero flag
+logic [7:0] temp;				// temp register for e.g. zero checks
 
 assign leds = regs[0][4:0];
 
@@ -51,6 +56,24 @@ ram #(
 	.dout(mem_out)
 );
 
+// ALU module
+logic [3:0]		alu_op;
+logic [7:0] 	alu_a, alu_b;
+logic       	alu_cin;
+logic [7:0] 	alu_result;
+logic       	alu_cout;
+logic			alu_zf;
+
+alu alu_inst (
+    .a(alu_a),
+    .b(alu_b),
+    .carry_in(alu_cin),
+    .op(alu_op),
+    .result(alu_result),
+    .carry_out(alu_cout),
+    .zero(alu_zf)
+);
+
 wire reset = ~reset_n;
 always_ff @( posedge clk or posedge reset ) begin : main
 
@@ -60,6 +83,8 @@ always_ff @( posedge clk or posedge reset ) begin : main
 		load_wait <= 0;
 		state_ctr <= 0;
 		state <= STATE_FETCH_IR;
+		carry <= 0;
+		zero <= 0;
 	end else begin
 		case (state)
 
@@ -160,7 +185,7 @@ always_ff @( posedge clk or posedge reset ) begin : main
 						if (!load_wait) begin
 							// Step 1: set memory address & data to write
 							mem_addr <= {ops[3], ops[2], ops[1]} + state_ctr;
-							mem_in <= regs[rd + state_ctr];
+							mem_in <= regs[rs + state_ctr];
 							mem_write <= 1;												
 							load_wait <= 1;
 						end else begin
@@ -171,6 +196,146 @@ always_ff @( posedge clk or posedge reset ) begin : main
 							if (state_ctr == ir_width) begin						
 								state_ctr <= 0;
 								state <= STATE_FETCH_IR;
+							end
+						end
+					end
+
+					OP_ADDI1, OP_ADDI2, OP_ADDI3: begin
+						if (state_ctr == ir_width + 1) begin
+							state_ctr <= 0;
+							zero <= (temp == 8'h00);
+							state <= STATE_FETCH_IR;
+						end else begin
+							if (!load_wait) begin							
+								alu_a <= regs[rd + state_ctr];
+								alu_b <= ops[1 + state_ctr];
+								alu_op <= `ALU_ADD;
+								alu_cin <= carry;
+								load_wait <= 1; // get result at next clock edge
+							end else begin
+								regs[rd + state_ctr] <= alu_result;
+								carry <= alu_cout;
+
+								if (!state_ctr) begin
+									temp <= alu_result;
+								end else begin
+									temp <= temp | alu_result;
+								end
+
+								load_wait <= 0;
+								state_ctr <= state_ctr + 1;
+							end
+						end
+					end
+
+					OP_SUBI1, OP_SUBI2, OP_SUBI3: begin
+						if (state_ctr == ir_width + 1) begin
+							state_ctr <= 0;
+							zero <= (temp == 8'h00);
+							state <= STATE_FETCH_IR;
+						end else begin
+							if (!load_wait) begin							
+								alu_a <= regs[rd + state_ctr];
+								alu_b <= ops[1 + state_ctr];
+								alu_op <= `ALU_SUB;
+								alu_cin <= carry;
+								load_wait <= 1; // get result at next clock edge
+							end else begin
+								regs[rd + state_ctr] <= alu_result;
+								carry <= alu_cout;
+
+								if (!state_ctr) begin
+									temp <= alu_result;
+								end else begin
+									temp <= temp | alu_result;
+								end
+
+								load_wait <= 0;
+								state_ctr <= state_ctr + 1;
+							end
+						end
+					end
+
+					OP_AND1, OP_AND2, OP_AND3: begin
+						if (state_ctr == ir_width + 1) begin
+							state_ctr <= 0;
+							zero <= (temp == 8'h00);
+							state <= STATE_FETCH_IR;
+						end else begin
+							if (!load_wait) begin							
+								alu_a <= regs[rd + state_ctr];
+								alu_b <= ops[1 + state_ctr];
+								alu_op <= `ALU_AND;
+								alu_cin <= carry;
+								load_wait <= 1; // get result at next clock edge
+							end else begin
+								regs[rd + state_ctr] <= alu_result;
+								carry <= alu_cout;
+
+								if (!state_ctr) begin
+									temp <= alu_result;
+								end else begin
+									temp <= temp | alu_result;
+								end
+
+								load_wait <= 0;
+								state_ctr <= state_ctr + 1;
+							end
+						end
+					end
+
+					OP_OR1, OP_OR2, OP_OR3: begin
+						if (state_ctr == ir_width + 1) begin
+							state_ctr <= 0;
+							zero <= (temp == 8'h00);
+							state <= STATE_FETCH_IR;
+						end else begin
+							if (!load_wait) begin							
+								alu_a <= regs[rd + state_ctr];
+								alu_b <= ops[1 + state_ctr];
+								alu_op <= `ALU_OR;
+								alu_cin <= carry;
+								load_wait <= 1; // get result at next clock edge
+							end else begin
+								regs[rd + state_ctr] <= alu_result;
+								carry <= alu_cout;
+
+								if (!state_ctr) begin
+									temp <= alu_result;
+								end else begin
+									temp <= temp | alu_result;
+								end
+
+								load_wait <= 0;
+								state_ctr <= state_ctr + 1;
+							end
+						end
+					end
+
+					OP_XOR1, OP_XOR2, OP_XOR3: begin
+						if (state_ctr == ir_width + 1) begin
+							state_ctr <= 0;
+							zero <= (temp == 8'h00);
+							state <= STATE_FETCH_IR;
+						end else begin
+							if (!load_wait) begin							
+								alu_a <= regs[rd + state_ctr];
+								alu_b <= ops[1 + state_ctr];
+								alu_op <= `ALU_XOR;
+								alu_cin <= carry;
+								load_wait <= 1; // get result at next clock edge
+							end else begin
+								regs[rd + state_ctr] <= alu_result;
+								carry <= alu_cout;
+
+								if (!state_ctr) begin
+									temp <= alu_result;
+								end else begin
+									temp <= temp | alu_result;
+								end
+
+								load_wait <= 0;
+								state_ctr <= state_ctr + 1;
 							end
 						end
 					end

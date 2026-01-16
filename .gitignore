@@ -6,3 +6,5 @@ incremental_db
 *.rpt
 work
 _old_
+obj_dir
+vsim.wlf
