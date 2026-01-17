@@ -428,6 +428,49 @@ always_ff @( posedge clk or posedge reset ) begin : main
 					end
 
 					// ----------------------------------------
+					// PUSH
+					// ----------------------------------------
+					OP_PUSH1, OP_PUSH2, OP_PUSH3: begin
+						if (state_ctr == ir_width) begin
+							state_ctr <= 0;
+							state <= STATE_FETCH_IR;
+						end else begin
+							if (!load_wait) begin
+								mem_addr <= sp;
+								mem_write <= 1;
+								mem_in <= regs[rs + state_ctr];
+								load_wait <= 1;
+							end else begin
+								mem_write <= 0;								
+								sp <= sp - 1;
+								load_wait <= 0;
+								state_ctr <= state_ctr + 1;
+							end
+						end
+					end
+
+					// ----------------------------------------
+					// POP
+					// ----------------------------------------
+					OP_POP1, OP_POP2, OP_POP3: begin
+						if (state_ctr == ir_width) begin
+							state_ctr <= 0;
+							state <= STATE_FETCH_IR;
+						end else begin
+							if (!load_wait) begin
+								mem_addr <= sp;
+								mem_write <= 0;
+								load_wait <= 1;
+								sp <= sp + 1;
+							end else begin											
+								regs[rs + state_ctr] <= mem_in;
+								load_wait <= 0;
+								state_ctr <= state_ctr + 1;
+							end
+						end
+					end
+
+					// ----------------------------------------
 					// MOV
 					// ----------------------------------------
 					OP_MOV1, OP_MOV2, OP_MOV3: begin
