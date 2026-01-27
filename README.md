@@ -40,3 +40,35 @@ To run the simulator:
   > do sim.do
   ```  
 
+## CPU Construction
+
+The SystemVerilog project is composed of *modules*, which are logical 'devices' that are created on the chip.  The modules currently used are (the diagram shows where each is instantiated):
+
+```mermaid
+flowchart TD;
+    top[TOP<br/><small>rexta_top.sv</small>]
+    top --- stack[STACK<br/><small>stack.sv</small>]    
+    top --- rom[ROM<br/><small>rom.sv</small>]
+    top --- bus[BUS<br/><small>bus.sv</small>]
+
+    top --- cpu[CPU<br/><small>cpu.sv</small>]
+    cpu --- alu[ALU<br/><small>cpu/alu.sv</small>]
+    cpu --- decoder[Decoder<br /><small>cpu/decoder.sv</small>]
+    cpu --- registers[Register File<br /><small>cpu/registers.sv</small>]
+    
+    top --- io[I/O<br/><small>io.sv</small>]
+    io --- vuart[Virtual UART<br /><small>io/virtual_uart.sv</small>]
+```
+
+| Module        | Description                                                                 |
+|---------------|-----------------------------------------------------------------------------|
+| TOP           | Top-level file which groups modules together into the actual CPU.           |
+| STACK         | System stack (which is stored in the FPGA's BRAM).                          |
+| ROM           | Boot ROM which contains the startup code.                                   |
+| BUS           | The memory map that handles assigning specific memory locations to devices. |
+| CPU           | Handles the actual instruction processing.                                  |
+| I/O           | Peripheral access via memory locations.                                     |
+| ALU           | Handles arithmetic and bitwise operations.                                  |
+| Decoder       | Decodes instructions, turning a packed instruction into a series of flags & values that tell the CPU how to execute the action. |
+| Register File | Handles reading/writing the general purpose registers. |
+| Virtual UART  | A peripheral that can write output to the console window when running in a simulator. |
