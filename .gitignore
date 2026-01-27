@@ -1,0 +1,28 @@
+# Quartus generated
+db/
+incremental_db/
+output_files/
+greybox_tmp/
+hc_output/
+*.jdi
+*.done
+*.rpt
+*.summary
+modelsim.ini
+*.smsg
+*.qws
+*.jditmp
+
+# Simulation
+simulation/
+*.wlf
+*.vstf
+Transcript
+work/
+msim/
+slm/
+
+# Misc
+*.bak
+*.orig
+*_old*
