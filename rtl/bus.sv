@@ -34,7 +34,7 @@ module system_bus (
     output logic        io_we,
     output logic [31:0] io_addr,
     input  logic [31:0] io_rdata,
-    output logic [31:0] io_wdata
+    output logic [31:0] io_wdata  
 );
     // Broadcast wdata
     assign stack_wdata = wdata;

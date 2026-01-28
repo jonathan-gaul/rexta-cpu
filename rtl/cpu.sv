@@ -17,7 +17,10 @@ module cpu (
     output logic [31:0] bus_wdata,
     output logic bus_we,
     input  logic [31:0] bus_rdata,
-    input  logic bus_ready
+    input  logic bus_ready,
+
+    // Debug LEDs
+    output logic [4:0] debug_leds
 );
 
     // CPU internal logic
@@ -25,6 +28,8 @@ module cpu (
     logic [31:0] pc_current;  // keep track of pc for the current execution
     logic [31:0] instruction; // current instruction before decoding
     
+    assign debug_leds = pc[4:0];
+
     typedef enum logic { FETCH, EXECUTE } state_t;
     state_t state;
 

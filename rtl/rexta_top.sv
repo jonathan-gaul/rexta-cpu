@@ -17,7 +17,16 @@ module rexta_top (
 
     // Outputs
     output logic [4:0] debug_leds,  // Debug LEDs on Cyclone IV board
-    output logic heartbeat_led      // Heartbeat LED
+    output logic heartbeat_led,      // Heartbeat LED
+
+    // SD Card
+    output wire sd_cs,
+    output wire sd_mosi,
+    output wire sd_sclk,
+    input wire sd_miso,
+
+    // SA52 (LED display)
+    output logic [7:0] sa52_seg
 );
 
 logic reset;
@@ -82,7 +91,19 @@ io io_inst (
     .ready(io_ready),
     .addr(io_addr),
     .rdata(io_rdata),
-    .wdata(io_wdata)
+    .wdata(io_wdata),
+
+    // Debug LEDs
+    .debug_leds(debug_leds),
+
+    // SD Card
+    .sd_cs(sd_cs),
+    .sd_mosi(sd_mosi),
+    .sd_sclk(sd_sclk),
+    .sd_miso(sd_miso),
+
+    // SA52 (LED Display)
+    .sa52_seg(sa52_seg)
 );
 
 //============================================================
@@ -141,6 +162,8 @@ cpu cpu_inst (
     .bus_we(bus_we),
     .bus_rdata(bus_rdata),
     .bus_ready(bus_ready)
+	 
+	 // .debug_leds(debug_leds)
 );
 //
 //------------------------------------------------------------

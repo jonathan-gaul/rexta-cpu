@@ -38,14 +38,36 @@
 
 
 set_global_assignment -name FAMILY "Cyclone IV E"
-set_global_assignment -name DEVICE AUTO
-set_global_assignment -name TOP_LEVEL_ENTITY cpu
+set_global_assignment -name DEVICE EP4CE6E22C8
+set_global_assignment -name TOP_LEVEL_ENTITY rexta_top
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 25.1STD.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "00:37:20  JANUARY 27, 2026"
 set_global_assignment -name LAST_QUARTUS_VERSION "25.1std.0 Lite Edition"
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT NONE -section_id eda_simulation
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_location_assignment PIN_86 -to sd_sclk
+set_location_assignment PIN_99 -to sd_mosi
+set_location_assignment PIN_83 -to sd_miso
+set_location_assignment PIN_28 -to sd_cs
+set_location_assignment PIN_88 -to reset_n
+set_location_assignment PIN_64 -to heartbeat_led
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_mosi
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_sclk
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_miso
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_cs
+set_location_assignment PIN_11 -to debug_leds[0]
+set_location_assignment PIN_7 -to debug_leds[1]
+set_location_assignment PIN_3 -to debug_leds[2]
+set_location_assignment PIN_2 -to debug_leds[3]
+set_location_assignment PIN_1 -to debug_leds[4]
+set_location_assignment PIN_24 -to clk
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sd_miso
+set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/io/sa52.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/io/virtual_uart.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/io/spi.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/io/sd.sv
@@ -59,5 +81,31 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/pkg.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/io.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/cpu.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/bus.sv
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sa52_seg[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sa52_seg[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sa52_seg[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sa52_seg[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sa52_seg[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sa52_seg[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sa52_seg[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sa52_seg[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sa52_seg
+set_location_assignment PIN_119 -to sa52_seg[0]
+set_location_assignment PIN_115 -to sa52_seg[1]
+set_location_assignment PIN_125 -to sa52_seg[2]
+set_location_assignment PIN_121 -to sa52_seg[3]
+set_location_assignment PIN_120 -to sa52_seg[4]
+set_location_assignment PIN_126 -to sa52_seg[5]
+set_location_assignment PIN_127 -to sa52_seg[6]
+set_location_assignment PIN_124 -to sa52_seg[7]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sa52_seg[0]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sa52_seg[1]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sa52_seg[2]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sa52_seg[3]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sa52_seg[4]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sa52_seg[5]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sa52_seg[6]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sa52_seg[7]
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
-set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
