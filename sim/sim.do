@@ -12,8 +12,9 @@ vlog -sv ../rtl/rom.sv
 vlog -sv ../rtl/stack.sv
 vlog -sv ../rtl/io/virtual_uart.sv
 vlog -sv ../rtl/io.sv
-#vlog -sv ../rtl/io/spi.sv
-#vlog -sv ../rtl/io/sd.sv
+vlog -sv ../rtl/io/spi.sv
+vlog -sv ../rtl/io/sd.sv
+vlog -sv ../rtl/io/sa52.sv
 vlog -sv ../rtl/cpu.sv
 vlog -sv ../rtl/rexta_top.sv
 
