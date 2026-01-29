@@ -86,6 +86,8 @@ module cpu (
     //
     logic op_is_bne;
     logic op_is_beq;
+    logic op_is_blt;
+    logic op_is_bge;
     logic op_use_immediate;
 	logic op_is_mem_access;
 	logic op_is_halt;
@@ -112,6 +114,8 @@ module cpu (
         .immediate_value(op_immediate_value),
         .is_bne(op_is_bne),
         .is_beq(op_is_beq),
+        .is_blt(op_is_blt),
+        .is_bge(op_is_bge),
         .is_halt(op_is_halt),
         .is_jump(op_is_jump),
 		.is_mem_access(op_is_mem_access),
@@ -145,8 +149,14 @@ module cpu (
     // Branching logic
 	logic rd_equal;
     assign rd_equal = (rdata1 == rdata2);
+    
     logic is_branch_taken;
-    assign is_branch_taken = (op_is_beq && rd_equal) || (op_is_bne && !rd_equal) || (op_is_jump);
+    assign is_branch_taken = 
+        (op_is_beq && rd_equal) || 
+        (op_is_bne && !rd_equal) || 
+        (op_is_blt && $signed(rdata1) < $signed(rdata2)) ||
+        (op_is_bge && $signed(rdata1) >= $signed(rdata2)) ||
+        (op_is_jump);
 
 	// CPU 'tick'
 	logic reset;

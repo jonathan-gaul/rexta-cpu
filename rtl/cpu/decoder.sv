@@ -26,6 +26,8 @@ module decoder (
     // Output Flags
 	output logic		is_bne,
 	output logic		is_beq,
+    output logic        is_blt,
+    output logic        is_bge,
     output logic [31:0] immediate_value,
     output logic        mem_we,   // High if writing to memory
     output logic        is_halt,
@@ -70,6 +72,8 @@ module decoder (
     always_comb begin
         is_beq        = 1'b0;
         is_bne        = 1'b0;
+		  is_blt 		 = 1'b0;
+		  is_bge        = 1'b0;
         reg_we        = 1'b0;
         alu_op        = ALU_ADD;
         mem_we        = 1'b0;
@@ -129,6 +133,8 @@ module decoder (
                 case (funct3)
                     3'b001: is_bne = 1'b1;
                     3'b000: is_beq = 1'b1;
+                    3'b100: is_blt = 1'b1;
+                    3'b101: is_bge = 1'b1;
                     default: ;
                 endcase
             end

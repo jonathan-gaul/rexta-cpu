@@ -18,7 +18,7 @@ module rom (
 logic [31:0] mem [0:1023];
 
 // Initialise the ROM from a .hex file
-initial $readmemh("../examples/led-b.hex", mem);
+initial $readmemh("../examples/led-counter.hex", mem);
 
 always_comb begin
     rdata = mem[addr[11:2]];
