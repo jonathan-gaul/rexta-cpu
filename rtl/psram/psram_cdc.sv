@@ -13,6 +13,7 @@ module psram_cdc (
 
     output logic        psram_req,
     output logic        psram_we,
+    output logic [3:0]  psram_sel,
     output logic [23:0] psram_addr,
     output logic [31:0] psram_wdata,
     input  logic        psram_ack,
@@ -34,6 +35,7 @@ module psram_cdc (
             ack_sys_sync <= '0;
             ack_sys_prev <= '0;
             psram_we     <= '0;
+            psram_sel    <= '0;
             psram_addr   <= '0;
             psram_wdata  <= '0;
         end else begin
@@ -47,6 +49,7 @@ module psram_cdc (
                 if (wb.cyc && wb.stb) begin
                     req_sys     <= '1;
                     psram_we    <= wb.we;
+                    psram_sel   <= wb.sel;
                     psram_addr  <= wb.adr[23:0];
                     psram_wdata <= wb.dat_w;
                 end

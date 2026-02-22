@@ -81,27 +81,8 @@ set_location_assignment PIN_30 -to sa52_n[7]
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to rst_n
 set_global_assignment -name TIMING_ANALYZER_MULTICORNER_ANALYSIS ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
-set_location_assignment PIN_53 -to psram0_sio[0]
-set_location_assignment PIN_50 -to psram0_sio[1]
-set_location_assignment PIN_52 -to psram0_sio[2]
-set_location_assignment PIN_51 -to psram0_sio[3]
-set_location_assignment PIN_66 -to psram1_sio[0]
-set_location_assignment PIN_64 -to psram1_sio[1]
-set_location_assignment PIN_65 -to psram1_sio[2]
-set_location_assignment PIN_59 -to psram1_sio[3]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to psram0_sio[0]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to psram0_sio[1]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to psram0_sio[2]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to psram0_sio[3]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to psram1_sio[0]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to psram1_sio[1]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to psram1_sio[2]
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to psram1_sio[3]
-set_location_assignment PIN_67 -to psram_ce_n
 set_location_assignment PIN_43 -to psram_sclk
 set_location_assignment PIN_11 -to debug_psram_ready
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to psram1_sio
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to psram0_sio
 set_location_assignment PIN_7 -to debug_sio_oe
 set_location_assignment PIN_127 -to sd_cs_n
 set_location_assignment PIN_124 -to sd_miso
@@ -122,4 +103,10 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/sram.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/soc_top.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/rom.sv
 set_global_assignment -name VERILOG_FILE ../rtl/picorv32.v
+set_location_assignment PIN_50 -to psram0_ce_n
+set_location_assignment PIN_52 -to psram1_ce_n
+set_location_assignment PIN_65 -to psram_sio[0]
+set_location_assignment PIN_67 -to psram_sio[1]
+set_location_assignment PIN_66 -to psram_sio[2]
+set_location_assignment PIN_64 -to psram_sio[3]
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -13,11 +13,11 @@ module soc_top (
     output logic        debug_psram_ready,
     output logic        debug_sio_oe,
 
-    // QSPI physical interface for PSRAM — shared control, separate data per chip
-    output logic        psram_ce_n,    // chip select, active low (both chips)
-    output logic        psram_sclk,    // serial clock (both chips)
-    inout  wire  [3:0]  psram0_sio,    // chip 0 quad I/O — data[15:0]
-    inout  wire  [3:0]  psram1_sio,    // chip 1 quad I/O — data[31:16]
+    // QSPI physical interface for PSRAM — shared data, separate chip selects
+    output logic        psram0_ce_n,  // chip 0 select, active low
+    output logic        psram1_ce_n,  // chip 1 select, active low
+    output logic        psram_sclk,   // serial clock (both chips)
+    inout  wire  [3:0]  psram_sio,    // chip quad I/O — data[15:0]
 
     // SPI physical interface for SD card
     output logic        sd_sclk,
@@ -181,7 +181,7 @@ module soc_top (
     );
 
     // =========================================================================
-    // Scratchpad SRAM — 512 B at 0x2000_0000
+    // Scratchpad SRAM — 0x2000_0000
     // =========================================================================
     sram #(.SIZE(128)) SRAM (
         .clk    (clk),
@@ -197,7 +197,7 @@ module soc_top (
         .rst_n  (rst_n),
         .bus    (io_bus),
 
-        .fp_busy_led(fp_busy_led), 
+        .fp_busy_led(fp_busy_led),
 
         .sa52_n (sa52_n),
 
@@ -208,17 +208,17 @@ module soc_top (
     );
 
     // =========================================================================
-    // PSRAM — 16 MB at 0x3000_0000
+    // PSRAM — 0x3000_0000
     // =========================================================================
-    psram #(.CLK_MHZ(50), .PSRAM_MHZ(5)) PSRAM (
+    psram #(.CLK_MHZ(50), .PSRAM_MHZ(1)) PSRAM (
         .clk          (clk),
         .rst_n        (rst_n),
         .bus          (psram_bus),
         .psram_ready  (psram_ready),
-        .psram_ce_n   (psram_ce_n),
+        .psram0_ce_n  (psram0_ce_n),
+        .psram1_ce_n  (psram1_ce_n),
         .psram_sclk   (psram_sclk),
-        .psram0_sio   (psram0_sio),
-        .psram1_sio   (psram1_sio)
+        .psram_sio    (psram_sio)
     );
 
     // =========================================================================

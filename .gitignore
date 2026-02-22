@@ -4,3 +4,4 @@ quartus/output_files
 quartus/simulation
 *.bak
 *.sv.*
+*.old
