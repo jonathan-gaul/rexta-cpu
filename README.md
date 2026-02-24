@@ -4,8 +4,8 @@ A small 32-bit RISC-V system-on-chip for the REXTA system, targeting the Intel (
 
 ## See Also
 
-- (USB Controller)[https://github.com/jonathan-gaul/rexta-usb]
-- (Audio Controller)[https://github.com/jonathan-gaul/rexta-apu]
+- [USB Controller](https://github.com/jonathan-gaul/rexta-usb)
+- [Audio Controller](https://github.com/jonathan-gaul/rexta-apu)
 
 ## Hardware
 
