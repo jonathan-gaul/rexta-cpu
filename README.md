@@ -2,6 +2,11 @@
 
 A small 32-bit RISC-V system-on-chip for the REXTA system, targeting the Intel (Altera) Cyclone IV EP4CE6E22C8 FPGA, built around the PicoRV32 soft processor core with a Wishbone B4 interconnect.
 
+## See Also
+
+- (USB Controller)[https://github.com/jonathan-gaul/rexta-usb]
+- (Audio Controller)[https://github.com/jonathan-gaul/rexta-apu]
+
 ## Hardware
 
 - **FPGA**: Intel Cyclone IV EP4CE6E22C8 (6272 LEs)
