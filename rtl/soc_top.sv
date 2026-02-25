@@ -23,7 +23,16 @@ module soc_top (
     output logic        sd_sclk,
     output logic        sd_mosi,
     input  logic        sd_miso,
-    output logic        sd_cs_n
+    output logic        sd_cs_n,
+
+    // SPI physical interface for USB HID controller (Tang Nano 1K HID controller)
+    output logic        usb_sclk,
+    output logic        usb_mosi,
+    input  logic        usb_miso,
+    output logic        usb_cs_n,
+
+    // IRQ input from Tang Nano 1K (active low, readable via STATUS)
+    input  logic        usb_irq_n
 );
 
     // =========================================================================
@@ -204,7 +213,13 @@ module soc_top (
         .sd_sclk (sd_sclk),
         .sd_mosi (sd_mosi),
         .sd_miso (sd_miso),
-        .sd_cs_n (sd_cs_n)
+        .sd_cs_n (sd_cs_n),
+
+        .usb_sclk (usb_sclk),
+        .usb_mosi (usb_mosi),
+        .usb_miso (usb_miso),
+        .usb_cs_n (usb_cs_n),
+        .usb_irq_n (usb_irq_n)
     );
 
     // =========================================================================

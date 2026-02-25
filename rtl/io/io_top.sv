@@ -5,9 +5,9 @@
 // Peripheral array index map: (*** not implemented yet)
 //   [0] SA52 display        0xF0000000 
 //   [1] SD card controller  0xF0001000
-//   [2] Timer/counter       0xF0002000  ***
-//   [3] Interrupt ctrl      0xF0003000  ***
-//   [4] SPI master          0xF0004000  ***
+//   [2] USB HID controller  0xF0002000
+//   [3] Timer/counter       0xF0003000  ***
+//   [4] Interrupt ctrl      0xF0004000  ***
 //   [5] GPIO output         0xF0005000  ***
 // =============================================================================
 
@@ -29,11 +29,14 @@ module io_top #(
     input  logic        sd_miso,
     output logic        sd_cs_n,
 
-    // Generic SPI physical interface (for future peripherals)
-    // output logic        spi_sclk,
-    // output logic        spi_mosi,
-    // input  logic        spi_miso,
-    // output logic        spi_cs_n,   // software controlled via SPI CTRL register
+    // USB HID controller physical interface (Tang Nano 1K HID controller)
+    output logic        usb_sclk,
+    output logic        usb_mosi,
+    input  logic        usb_miso,
+    output logic        usb_cs_n,
+
+    // IRQ from Tang Nano 1K HID controller (active low)
+    input  logic        usb_irq_n,
 
     // External interrupt lines
     // input  logic [3:0]  ext_irq,
@@ -50,7 +53,7 @@ module io_top #(
     timeunit 1ns;
     timeprecision 1ps;
 
-    localparam int DEVICE_COUNT = 2;  // number of peripherals in the system
+    localparam int DEVICE_COUNT = 3;  // SA52, SD, USB HID
 
     // =========================================================================
     // Peripheral interface array
@@ -114,12 +117,28 @@ module io_top #(
     assign fp_busy_led = ~(sd_activity_stretch != '0);
 
     // =========================================================================
+    // USB HID controller (Tang Nano 1K HID controller)
+    // =========================================================================
+    usb_ctrl #(
+        .CLK_MHZ (CLK_MHZ)
+    ) USB (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .bus        (devices[2]),
+        .usb_sclk   (usb_sclk),
+        .usb_mosi   (usb_mosi),
+        .usb_miso   (usb_miso),
+        .usb_cs_n   (usb_cs_n),
+        .usb_irq_n  (usb_irq_n)
+    );
+
+    // =========================================================================
     // Interrupt controller
     // =========================================================================
     // irq_ctrl IRQ (
     //     .clk        (clk),
     //     .rst_n      (rst_n),
-    //     .bus        (devices[1]),
+    //     .bus        (devices[3]),
     //     .ext_irq    (ext_irq),
     //     .timer_irq  (timer_irq),
     //     .spi_irq    (spi_irq),
@@ -132,26 +151,9 @@ module io_top #(
     // timer TIMER (
     //     .clk        (clk),
     //     .rst_n      (rst_n),
-    //     .bus        (devices[2]),
+    //     .bus        (devices[3]),
     //     .timer_irq  (timer_irq)
     // );
-
-
-
-    // =========================================================================
-    // Generic SPI master
-    // =========================================================================
-    // spi_master SPI (
-    //     .clk        (clk),
-    //     .rst_n      (rst_n),
-    //     .bus        (devices[4]),
-    //     .spi_sclk   (spi_sclk),
-    //     .spi_mosi   (spi_mosi),
-    //     .spi_miso   (spi_miso)
-    // );
-
-    // assign spi_irq  = '0;
-    // assign spi_cs_n = '1;
 
     // =========================================================================
     // GPIO output
