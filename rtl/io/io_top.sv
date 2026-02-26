@@ -6,9 +6,10 @@
 //   [0] SA52 display        0xF0000000 
 //   [1] SD card controller  0xF0001000
 //   [2] USB HID controller  0xF0002000
-//   [3] Timer/counter       0xF0003000  ***
-//   [4] Interrupt ctrl      0xF0004000  ***
-//   [5] GPIO output         0xF0005000  ***
+//   [3] SSD1306 OLED        0xF0003000
+//   [4] Timer/counter       0xF0004000  ***
+//   [5] Interrupt ctrl      0xF0005000  ***
+//   [6] GPIO output         0xF0006000  ***
 // =============================================================================
 
 module io_top #(
@@ -38,6 +39,13 @@ module io_top #(
     // IRQ from Tang Nano 1K HID controller (active low)
     input  logic        usb_irq_n,
 
+    // SSD1306 OLED display physical interface
+    output logic        ssd_sclk,
+    output logic        ssd_mosi,
+    output logic        ssd_res_n,
+    output logic        ssd_dc,
+    output logic        ssd_cs_n,
+
     // External interrupt lines
     // input  logic [3:0]  ext_irq,
 
@@ -53,7 +61,7 @@ module io_top #(
     timeunit 1ns;
     timeprecision 1ps;
 
-    localparam int DEVICE_COUNT = 3;  // SA52, SD, USB HID
+    localparam int DEVICE_COUNT = 4;  // SA52, SD, USB HID, SSD1306
 
     // =========================================================================
     // Peripheral interface array
@@ -130,6 +138,23 @@ module io_top #(
         .usb_miso   (usb_miso),
         .usb_cs_n   (usb_cs_n),
         .usb_irq_n  (usb_irq_n)
+    );
+
+    // =========================================================================
+    // SSD1306 OLED display controller
+    // =========================================================================
+    ssd1306 #(
+        .CLK_MHZ (CLK_MHZ),
+        .SPI_MHZ (8)        // 8 MHz SPI clock for SSD1306
+    ) SSD1306 (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .bus        (devices[3]),
+        .ssd_sclk   (ssd_sclk),
+        .ssd_mosi   (ssd_mosi),
+        .ssd_res_n  (ssd_res_n),
+        .ssd_dc     (ssd_dc),
+        .ssd_cs_n   (ssd_cs_n)
     );
 
     // =========================================================================

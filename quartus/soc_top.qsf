@@ -96,6 +96,12 @@ set_location_assignment PIN_65 -to psram_sio[0]
 set_location_assignment PIN_67 -to psram_sio[1]
 set_location_assignment PIN_66 -to psram_sio[2]
 set_location_assignment PIN_64 -to psram_sio[3]
+set_location_assignment PIN_55 -to usb_miso
+set_location_assignment PIN_58 -to usb_mosi
+set_location_assignment PIN_59 -to usb_sclk
+set_location_assignment PIN_60 -to usb_cs_n
+set_location_assignment PIN_69 -to usb_irq_n
+set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/io/ssd1306.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/io/usb_ctrl.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/psram/psram_pll.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/psram/psram_ctrl.sv
@@ -110,9 +116,9 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/sram.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/soc_top.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/rom.sv
 set_global_assignment -name VERILOG_FILE ../rtl/picorv32.v
-set_location_assignment PIN_55 -to usb_miso
-set_location_assignment PIN_58 -to usb_mosi
-set_location_assignment PIN_59 -to usb_sclk
-set_location_assignment PIN_60 -to usb_cs_n
-set_location_assignment PIN_69 -to usb_irq_n
+set_location_assignment PIN_34 -to ssd_sclk
+set_location_assignment PIN_100 -to ssd_mosi
+set_location_assignment PIN_104 -to ssd_res_n
+set_location_assignment PIN_106 -to ssd_dc
+set_location_assignment PIN_111 -to ssd_cs_n
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

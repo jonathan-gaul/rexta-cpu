@@ -32,7 +32,14 @@ module soc_top (
     output logic        usb_cs_n,
 
     // IRQ input from Tang Nano 1K (active low, readable via STATUS)
-    input  logic        usb_irq_n
+    input  logic        usb_irq_n,
+
+    // SPI physical interface for SSD1306 OLED display
+    output logic        ssd_sclk,
+    output logic        ssd_mosi,
+    output logic        ssd_res_n,
+    output logic        ssd_dc,
+    output logic        ssd_cs_n
 );
 
     // =========================================================================
@@ -219,7 +226,13 @@ module soc_top (
         .usb_mosi (usb_mosi),
         .usb_miso (usb_miso),
         .usb_cs_n (usb_cs_n),
-        .usb_irq_n (usb_irq_n)
+        .usb_irq_n (usb_irq_n),
+
+        .ssd_sclk  (ssd_sclk),
+        .ssd_mosi  (ssd_mosi),
+        .ssd_res_n (ssd_res_n),
+        .ssd_dc    (ssd_dc),
+        .ssd_cs_n  (ssd_cs_n)
     );
 
     // =========================================================================
